@@ -1,0 +1,53 @@
+def minmax(Ci) :
+ with
+       s = CCX + add_subst(Ci, state_var(S), evolution(S)),
+       minU = a_margmin(s, controllable_var(S)),
+       etats = intersection(a_inf(minU, a_const(65535)), 
+			    projection(constraint(S), 
+				       union_lvar(state_var(S), 
+						  diff_lvar(event_var(S), 
+						  controllable_var(S))))),
+      % differencier les triplets \not in constraint(S)%
+      % 1. tout ce qui n'appartient pas a etats vaut 0 %
+       temp = a_part(etats, minU, a_const(0), ainfty),
+
+      % 2. on ajoute aux n-uplets appartenant a etats la valeur 0 %
+      % si \in constraint(S) et -65536 si \notin constraint(S) %
+       temp = temp + CINT,
+
+      % 3. les triplets \notin constraint(S) ont la valeur -65536. % 
+      % Les n-uplets \notin constraint(S) et \notin etats ont la valeur 0. % 
+      % A ces n-uplets la on donne la valeur +oo %
+       temp = temp + a_part(a_iminv(a_part(etats, minU, a_const(0), ainfty)+ CINT, 0),
+                            ainfty, a_const(0), ainfty) 
+
+     do
+
+     a_margmax(temp, diff_lvar(event_var(S), controllable_var(S)));
+
+
+
+def min_cost_function_maxUC(S, Cx, Ef) :
+ with
+     C0 = a_part(Ef, a_const(0), ainfty, ainfty),
+     % cout de etats restraints a constraint(S) :  %
+     CCX = a_part(intersection (a_inf(Cx, a_const (65535)), 
+				 projection(constraint(S),state_var(S))), 
+                  Cx, ainfty, ainfty),
+     % tous les n-uplets qui n'appartiennent pas a constraint(S) ont le cout -65536, les autres valent 0. %
+     CINT = a_part(projection(constraint(S), union_lvar(state_var(S), 
+							diff_lvar(event_var(S), 
+							controllable_var(S)))), 
+                   a_const(0), a_const(-65536), ainfty) 
+
+      do
+      loop Ci = a_min(Ci, minmax(Ci)) init C0;
+
+
+
+def S_min_weight_path_maxUC(S, Cx, Ef) :
+ with
+      Cm = min_cost_function_maxUC(S, Cx, Ef),
+      States_2 = declare_suff(state_var(S)),
+      Cm_2 = add_rename(Cm, state_var(S), States_2) do
+ Strictly_Lower_than(S, Cm, Cm_2, States_2);

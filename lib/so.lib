@@ -1,0 +1,111 @@
+
+
+def pre_cost_function_UC(Ci, S) : 
+  with 
+	E = a_inf(Ci, a_const(65535)), 
+	F = Invariant_under_Control(S, E), 
+	K = Cx + add_rename(Ci, CURR, NEXT), 
+	COUPLES = projection(intersection(R, F), union_lvar(CURR, NEXT)),
+	Kp = a_part(COUPLES, K, ainfty, ainfty)  do
+  a_min(Ci, a_margmin(Kp, NEXT));
+
+def min_cost_function_UC(S, Cx, EF) : 
+  with 
+	States = state_var(S),
+	States_Uncontrolables = comp_lvar(controllable_var(S)),
+	Q = constraint(S),
+	Q1 = projection(Q, States_Uncontrolables),
+	CQ1 = complementary(Q1),
+	IMP = implicit_sys(S),
+	NEXT = state_var_next_I(IMP),
+	CURR = state_var(S), 
+	R = trans_rel_I(IMP),
+	C0 = a_part(EF, Cx, ainfty, ainfty)  do
+  loop Ci = pre_cost_function_UC(Ci, S) init C0; 
+
+
+def S_min_weight_path_UC(S, Cx, Ef) : 
+  with
+       Cm = min_cost_function_UC(S, Cx, Ef),
+       States_2 = declare_suff(state_var(S)),
+       Cm_2 = add_rename(Cm, state_var(S), States_2) do 
+  Strictly_Lower_than(S, Cm, Cm_2, States_2); 
+
+
+def pre_cost_function_maxUC(Ci, S) : 
+  with 
+	E = a_inf(Ci, a_const(65535)), 
+%	F = Invariant_under_Control(S, E), %
+%	F = some_succ(S, E), %
+        ST = union_lvar(CURR, NEXT),
+	F = coefx(union(complementary(Q), 
+                  union(projection(intersection(R, rename(E, state_var_I(IMP), state_var_next_I(IMP))), 
+                                   union_lvar(state_var_I(IMP), event_var(S))), 
+                        subst(R, state_var_next_I(IMP), state_var_I(IMP)))), ST),
+	K = Cx + add_rename(Ci, CURR, NEXT), 
+        TRANS_INC = intersection(R, F), 
+        Kp1 = a_part(TRANS_INC, K, ainfty, ainfty),
+        CImax = a_margmin(Kp1, union_lvar(NEXT, controllable_var(S))),
+        ETATS = a_inf(CImax, a_const(65536)), 
+        Kp2 = a_part(ETATS, CImax, a_const(-65536), ainfty), 
+        Kpmax = a_margmax(Kp2, diff_lvar(event_var(S), controllable_var(S))), 
+        ETATS = a_sup(Kpmax, a_const(-65535)),
+        Kpmax = a_part(ETATS, Kpmax, ainfty, ainfty) do 
+  a_min(Ci, Kpmax);
+
+def min_cost_function_maxUC(S, Cx, EF) : 
+  with 
+	States = state_var(S),
+	States_Uncontrolables = comp_lvar(controllable_var(S)),
+	Q = constraint(S),
+	Q1 = projection(Q, States_Uncontrolables),
+	CQ1 = complementary(Q1),
+	IMP = implicit_sys(S),
+	NEXT = state_var_next_I(IMP),
+	CURR = state_var(S), 
+	R = trans_rel_I(IMP),
+	C0 = a_part(EF, Cx, ainfty, ainfty)  do
+  loop Ci = pre_cost_function_maxUC(Ci, S) init C0; 
+
+
+def S_min_weight_path_maxUC(S, Cx, Ef) : 
+  with
+       Cm = min_cost_function_maxUC(S, Cx, Ef),
+       States_2 = declare_suff(state_var(S)),
+       Cm_2 = add_rename(Cm, state_var(S), States_2) do 
+  Strictly_Lower_than(S, Cm, Cm_2, States_2); 
+
+
+def pre_cost_function(Ci, S) : 
+  with 
+	E = a_inf(Ci, 65535), 
+	F = some_succ(S, E), 
+%        F = projection(union(CQ1, projection(intersection(Q, comorphisme(S, E)), States_Uncontrolables)), States),%
+	K = Cx + add_rename(Ci, CURR, NEXT), 
+	COUPLES = projection(intersection(R, F), union_lvar(CURR, NEXT)),
+	Kp = a_part(COUPLES, K, ainfty, ainfty)  do
+  a_min(Ci, a_margmin(Kp, NEXT));
+
+
+def min_cost_function(S, Cx, EF) : 
+  with 
+	States = state_var(S),
+	States_Uncontrolables = comp_lvar(controllable_var(S)),
+	Q = constraint(S),
+	Q1 = projection(Q, States_Uncontrolables),
+	CQ1 = complementary(Q1),
+	IMP = implicit_sys(S),
+	NEXT = state_var_next_I(IMP),
+	CURR = state_var(S), 
+	R = trans_rel_I(IMP),
+	C0 = a_part(EF, Cx, ainfty, ainfty)  do
+  loop Ci = pre_cost_function(Ci, S) init C0; 
+
+
+def S_min_weight_path(S, Cx, Ef) : 
+  with
+       Cm = min_cost_function(S, Cx, Ef),
+       States_2 = declare_suff(state_var(S)),
+       Cm_2 = add_rename(Cm, state_var(S), States_2) do 
+  Strictly_Lower_than(S, Cm, Cm_2, States_2); 
+

@@ -1,0 +1,26 @@
+%----------------------------------------------------------%
+% doit etre charge apres le .z3z contenant le systeme      %
+%               et avant la creation du SDP correspondant  %
+%                                                          %
+% utilisation :  Read("little.z3z");                       %
+%                Read("adaptNewSigali2Matou.z3z");         %
+%                Read("Creat_SDP.lib");                    %
+%----------------------------------------------------------%
+
+events: conditions;
+
+states: etats;
+
+initialisations: initialisations;
+
+evolutions: evolutions;
+
+constraints: contraintes;
+
+controllables: controlables;
+
+% ??? cond_libres : pas utilise par Creat_SDP ... %
+
+
+
+

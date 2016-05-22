@@ -1,0 +1,24 @@
+#!/bin/csh
+#-------------------------Install infos ------------------------
+#
+# This script defines the following command
+#   sigali
+#
+# ---------------------------------------------------------------
+setenv SIGALIROOT '/Users/channgo/Tools/Sigali-2.3'
+setenv SigaliHelp "mozilla $SIGALIROOT/doc"
+setenv CURRENTOS `uname -s`
+if ( `echo $CURRENTOS | egrep -c "CYGWIN"` != 0 ) setenv CURRENTOS Cygwin
+alias sigali $SIGALIROOT/bin/sigali
+ 
+# SIGALI predefined libraries
+ if ( ! $?SIGALI_PATH ) setenv SIGALI_PATH "" 
+ setenv SIGALI_PATH ".:${SIGALIROOT}/lib:${SIGALI_PATH}" 
+ 
+echo "-----------------------------------------------------------------------------"
+echo "" 
+echo " >>>> sigali command is available."
+echo " >>>> SIGALI Documentation is available in : $SIGALIROOT/doc directory "
+echo " >>>> Predefined SIGALI Libraries are available in : $SIGALIROOT/lib directory "
+echo""
+echo "------------------------------------------------------------------------------"

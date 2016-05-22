@@ -1,0 +1,47 @@
+
+
+%--- 		fonctions diverses calculées 			---%
+%---								---%
+%---	- succ(S_Imp,ee) : successeurs de ee	(cf Implicit.bib)	---%
+%---	- epred(S_Imp,ee) : predecesseurs de ee			---%
+%---	- asucc(S_Imp,ee) : etats dont les predecesseurs sont dans ee	---%
+%---	- apred(S_Imp,ee) : etats dont les successeurs sont dans ee	---%
+%---								---%
+%---	- invar(S_Imp,ee) : vrai si succ(ee) inclus dans ee		---%
+%---	- inv_under_cont(S_Imp,ee) : vrai si ee inclus dans  pred(ee)	---%
+%---								---%
+%---	- pg_invar(S_Imp,ee) : plus grand invariant de ee		---%
+%---	- pg_stabil(S_Imp,ee) : plus grand stabilisable de ee		---%
+
+
+def succ(S_Imp,ee): subst(projection(intersection(ee,
+                                            trans_rel_I(S_Imp)),
+			       state_var_next_I(S_Imp)),
+	            state_var_next_I(S_Imp),state_var_I(S_Imp));
+
+
+def orbite(S_Imp,ee) : loop xx = union(succ(S_Imp,xx),xx) init ee;
+
+
+def CT_Rel(S_Imp) : complementary(trans_rel_I(S_Imp));
+
+
+def epred(S_Imp,ee) : projection(intersection(rename(ee,state_var_I(S_Imp),
+                                                     state_var_next_I(S_Imp)),
+				              trans_rel_I(S_Imp)),
+                                 state_var_I(S_Imp));
+
+
+def asucc(S_Imp,ee) : rename(coefx(ee*CT_Rel,
+				   state_var_next_I(S_Imp)),
+			     state_var_next_I(S_Imp),state_var_I(S_Imp));
+
+def apred(S_Imp,ee) : coefx(CT_Rel(S_Imp)*rename(ee,state_var_I(S_Imp),
+                                                    state_var_next_I(S_Imp))
+		            ,state_var_I(S_Imp));
+
+def invar(S_Imp,ee) :  inclus(succ(S_Imp,ee),ee);
+def inv_under_cont(S_Imp,ee) : inclus(ee,epred(S_Imp,ee));
+
+def pg_inv(S_Imp,ee) : loop x = intersection(x,apred(S_Imp,x)) init ee;
+def pg_stabil(S_Imp,ee) : loop x = intersection(x,predS_Imp,(x)) init ee;

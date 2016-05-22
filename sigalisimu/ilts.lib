@@ -1,0 +1,24 @@
+%************************************************************************%
+
+% This lib computes the implicit transition system 	                     %
+% Input: the data from *z3z file								 		 %
+% Out  : S_I1 < S_I2:S_I2 simulates S_I1				 				 %
+
+% Created by: Van-Chan Ngo                                               %
+
+%************************************************************************%
+
+
+% load libraries %
+  load("Implicit.lib");
+
+% get ilts from *.z3z %
+def ilts(E,S,Evo,I,C,Ctrl) :
+   with
+	  % create system %
+	  sys_File = system(E,S,Evo,I,C,Ctrl)
+   do
+   
+   % compute the ilts model %
+   implicit_sys(sys_File);
+

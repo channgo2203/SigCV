@@ -1,0 +1,74 @@
+%*******************************************%
+% This lib computes symbolic bisimulation   %
+% relation between two polynomial dynamical %
+% systems based on the implicit transition  %
+% system representations of them.           %
+% Input: S_I1, S_I2                         %
+% Output: ilts_bisimulation(S_I1,S_I2)      %
+%*******************************************%
+
+
+
+% internal function P1 ==> P2 %
+def implies(P1,P2) :
+   union(complementary(P1),
+      P2);
+
+def states_bisimulation(X_1,Y_1,X_1_nexts,Rel_1,
+	                    X_2,Y_2,X_2_nexts,Rel_2) :
+   with
+      % define utility variables %
+      Y_1_bar = diff_lvar(Y_1,Y_2),
+      Y_2_bar = diff_lvar(Y_2,Y_1),
+      Y = diff_lvar(Y_1,Y_1_bar),
+      X_1_X_2 = union_lvar(X_1,X_2),
+      X_1_nexts_Y_1_bar = union_lvar(X_1_nexts,Y_1_bar),
+      X_2_nexts_Y_2_bar = union_lvar(X_2_nexts,Y_2_bar),
+      X_1_X_2_nexts = union_lvar(X_1_nexts,X_2_nexts)
+   do
+
+   % compute the bisimulation %
+   	loop x =
+	    intersection(x,
+		 forall(forall(exist(implies(Rel_1,
+		  exist(intersection(Rel_2,
+		   rename(x,X_1_X_2,X_1_X_2_nexts)),
+		    X_2_nexts_Y_2_bar)),Y_1_bar),Y),X_1_nexts),
+		 forall(forall(exist(implies(Rel_2,
+		  exist(intersection(Rel_1,
+		   rename(x,X_1_X_2,X_1_X_2_nexts)),
+		    X_1_nexts_Y_1_bar)),Y_2_bar),Y),X_2_nexts))
+	     init 0;
+
+
+def ilts_bisimulation(S_I1,S_I2) :
+   with
+      % get the components of iLTS1 %
+      I_1 = initial_I(S_I1),
+      X_1 = state_var_I(S_I1),
+      X_1_nexts = state_var_next_I(S_I1),
+      Y_1 = event_var_I(S_I1),
+      Rel_1 = trans_rel_I(S_I1),
+      
+      % get the components of iLTS2 %
+      I_2_d = initial_I(S_I2),
+      X_2_d = state_var_I(S_I2),
+      X_2_nexts_d = state_var_next_I(S_I2),
+      Y_2 = event_var_I(S_I2),
+      Rel_2_d = trans_rel_I(S_I2),
+      % rename the states variables %
+      X_2 = declare_suff(X_2_d),
+      X_2_nexts = declare_suff(X_2_nexts_d),
+	  I_2 = rename(I_2_d,X_2_d,X_2),
+      Rel_2 = rename(Rel_2_d,union_lvar(X_2_d,X_2_nexts_d),
+	                 union_lvar(X_2,X_2_nexts)),
+      states_bisim = states_bisimulation(X_1,Y_1,X_1_nexts,
+                     Rel_1,X_2,Y_2,X_2_nexts,Rel_2)
+   do
+
+   % compute the systems bisimulation %
+   intersection(states_bisim,
+                forall(implies(I_1,exist(intersection(
+                       states_bisim,I_2),X_2)),X_1),
+				forall(implies(I_2,exist(intersection(
+	                   states_bisim,I_1),X_1)),X_2));

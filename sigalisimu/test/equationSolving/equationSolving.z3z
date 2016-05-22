@@ -1,0 +1,92 @@
+
+declare(
+        next_stable,
+        states_1,
+        cond_1,
+        OK,
+        cond_2,
+        cond_3,
+        cond_4,
+        cond_5,
+        err2);
+
+
+
+CLK_stable : next_stable ^2;
+
+stable : states_1 * CLK_stable;
+
+CLK_a : when stable;
+
+CLK_bb : when OK;
+
+CLK_d : when cond_1;
+
+biterate : CLK_d default (not stable) * CLK_stable * (1 - CLK_d);
+
+CLK_x2 : when next_stable and biterate;
+
+CLK_x : when cond_3;
+
+CLK_bb_214 : when not OK;
+
+CLK_err2 : when cond_5;
+
+CLK_a2 : when not cond_5;
+
+CLK_oc : when cond_4 default CLK_err2;
+
+oc : when cond_4 default err2;
+
+CLK_a1 : CLK_x2 default CLK_x;
+
+CLK_x1 : CLK_a1 default CLK_a2;
+
+
+
+
+events: [
+        next_stable,
+        cond_1,
+        OK,
+        cond_2,
+        cond_3,
+        cond_4,
+        cond_5,
+        err2];
+
+
+states: [
+        states_1];
+
+
+initialisations: [
+        states_1 = 1];
+
+
+evolutions: [
+        next_stable * CLK_stable + (1 - CLK_stable) * states_1];
+
+
+constraints: [
+        OK ^2 = CLK_a,
+        cond_1 ^2 = CLK_bb,
+        cond_2 ^2 = CLK_stable,
+        cond_3 ^2 = CLK_bb,
+        cond_4 ^2 = CLK_bb,
+        cond_5 ^2 = CLK_bb_214,
+        err2 ^2 = CLK_err2];
+
+
+controllables: [
+        ];
+
+
+free_cond: [
+        cond_1,
+        cond_2,
+        cond_3,
+        cond_4,
+        cond_5];
+
+

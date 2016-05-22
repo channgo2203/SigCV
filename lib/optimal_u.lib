@@ -1,0 +1,68 @@
+
+def pre_cost_function_uc(S_Imp,Ci, Cx,Cy,Ck): 
+  with 
+		% états déjà visités% 
+	Ei = a_inf(Ci,a_const(70000)), 
+	% Nouveau états %  
+	PreEi = intersection(epred(S_Imp, Ei),orbite(S_Imp,initial_I(S_Imp))),
+  
+	 % Successeurs de preEi qui n'ont pas encore été visité %
+	 SuccEi = intersection(succ(S_Imp,PreEi),complementary(Ei),orbite(S_Imp,initial_I(S_Imp))),
+	
+	    % Le cout des états de succEi = oo (mais moins grand que l'oo :-) %
+            C_new = a_part(SuccEi,a_const(350000),Ci,Ci), 
+
+	% Ensemble des x--y,k--> x' avec x \in PreEi et x\in Ei% 
+	Trans_i = intersection(PreEi,
+			       trans_rel_I(S_Imp),
+			       rename(union(Ei,SuccEi), 
+			              state_var_I(S_Imp),
+				      state_var_next_I(S_Imp))),
+	Ki = Cx + Cy + Ck + add_rename(C_new, state_var_I(S_Imp),state_var_next_I(S_Imp)),
+
+	 % Calcul des coûts  Ki(x,y,k,x') sur Trans_i%
+	Ki = Cx + Cy + Ck + add_rename(C_new, state_var_I(S_Imp),state_var_next_I(S_Imp)),
+        
+            % on garde un coup oo pour les couple (x,y,u) t.q. x--y,u--> x'\notin Ei%
+	     Kp = a_part(Trans_i,Ki,ainfty,ainfty),
+
+
+	% Début du calcul de la nouvelle fonction de coût %
+
+	% minimisation suivant k et x' -> Kxy(X,Y)% 
+	Kxy = a_margmin(Kp,union_lvar(state_var_next_I(S_Imp),
+	                              controllable_var_I(S_Imp))),
+
+	Inter = a_part(a_inf(Kxy,a_const(655350)), Kxy ,a_const(-2),a_const(-2)),
+  
+
+	% minimisation suivant y   -> C(X)% 
+        C =  a_margmax(Inter,diff_lvar(comp_lvar(controllable_var_I(S_Imp)),
+	                                   state_var_I(S_Imp))),
+
+	% On compare avec les couts calculés à l'étape précédente %
+	D = a_min(Ci,a_part(a_sup(C,a_const(-1)),C,ainfty,ainfty)) do 
+
+	% D(x) possède des cout =-2 et à 350000 correspondant en fait à oo %
+	% il faut donc remettre l'oo                                       %
+	
+         a_part(a_inf(D,a_const(349999)),D,ainfty,ainfty);
+
+def min_cost_function_uc(S, Cx,Cy,Ck, Ef) : 
+  with 
+	S_Imp = implicit_sys(S),
+	C0 = a_part(Ef, Cx, ainfty, ainfty)  do
+  loop Ci =  pre_cost_function_uc(S_Imp,Ci, Cx,Cy,Ck) init C0 ; 
+
+
+
+def S_min_weight_path_uc(S, Cx,Cy,Ck, Ef) : 
+  with
+       Cm = min_cost_function_uc(S, Cx,Cy,Ck, Ef),
+       States_2 = declare_suff(state_var(S)),
+       Cm_2 = add_rename(Cm, state_var(S), States_2) 
+  do 
+     Strictly_Lower_than(S, Cm, Cm_2, States_2); 
+
+
+

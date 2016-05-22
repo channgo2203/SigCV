@@ -1,0 +1,19 @@
+	%=====================================================%
+	%            INITIALISATION DU SDP		      %
+	%=====================================================%
+
+% Ce fichier est lu par sigali une fois que le fichier .z3z     %
+% provenant de la traduction en système d'équation polynomiales %
+% a été lu par sigali  %
+% En sortie, on obtient un système dynamique polynômial  %
+% de la forme                                            %
+%   X_nexts=Evol(X,Y)                                    %
+%   Q(X,Y)=0                                             %
+%   Ini(X)=0                                             %
+
+%---  Création du système dynamique polynomiale   ---%
+S: processus(events, states, evolutions, initialisations, [gen(constraints)],controllables);
+
+
+
+

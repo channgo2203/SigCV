@@ -1,0 +1,25 @@
+
+%---  comorphisme ---%
+def comorphisme(S,x) : subst(x, state_var(S), evolution(S));
+
+
+%--- EXPRESSION DES PROPRIETES  ---%
+
+%Set of states where Prop is True%
+def B_True(S,prop) : projection(gen([prop=1]),state_var(S));
+%Set of states where Prop is False% 
+def B_False(S,prop) : projection(gen([prop=-1]),state_var(S));
+%Set of states where Prop is "absent"%  
+def B_Absent(S,prop) : projection(gen([prop=0]),state_var(S));
+
+
+% Combination of set of states % 
+% To be used with B_True,B_False % 
+ 
+def B_And(prop1,prop2) : intersection(prop1,prop2);
+def B_Or(prop1,prop2) : union(prop1,prop2);
+def B_Not(prop) : complementary(prop);
+def Complementary(prop) : complementary(prop);
+	
+def Equal(P,Q) : union(gen([P=1,Q=1]),union(gen([P=-1,Q=-1]),gen([P=0,Q=0])));
+def Synch(P,Q) : gen([P^2=Q^2]);

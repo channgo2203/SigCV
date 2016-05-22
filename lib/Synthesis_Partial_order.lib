@@ -1,0 +1,44 @@
+       %*****************%
+        %    FREE_MAX     %
+        %*****************%
+
+% Le but de cet objectif de commande est de laisser %
+% La plus grande liberté possible aux  événements   %
+% non contrôlables.                                 %
+ 
+def S_Free_Max(S) : 
+   with  
+	   States = state_var(S), 
+	   States_Uncontrolable = comp_lvar(controllable_var(S)),
+    %--- Duplication des etats---%
+        P_States = declare_suff(States), 
+    %--- Calcul de la relation d'ordre R ---% 
+        QV = projection(contrainte(S),States_Uncontrolable),
+        QW =  renommage(QV, States, P_States),
+        X2 =  union_lvar(States, P_States),
+        R  =  intersection(coefx(union(
+              complementary(QV), QW), X2),
+              complementary(coefx(union(complementary(QW), QV), X2))),
+         %--- Calcul des états initiaux  ---%
+        new_initial_states =
+            intersection(initial(S), complementary(projection(intersection(R, 
+                         rename( initial(S),States,P_States)), States))) ,
+         %--- Calcul du controleur  ---%
+           %--- Duplication de nouvelles variables ---%
+           %--- et création de nouveaux polynômes --%          
+        primaires  = union_lvar(States, conditions),
+        controllable2 =  declare_suff(controllable_var(S)),
+        evolutions2 =  l_rename(evolutions, controllable_var(S), controllable2),
+        double_evolutions = concat(evolutions, evolutions2),
+        double_States = union_lvar(States, P_States),
+           %---  U(x,y,z,z') = 0 ssi P(x,y,z) < P(x,y,z')   ---%
+        U =  subst(R, double_States, double_evolutions),
+           %--- R(x,y,z)=0 ssi ---%
+           %--- pour tout z' tq Q(x,y,z')=0 => U(x,y,z,z') = 0 ---%
+        Rxyz =  coefx(union(complementary(
+                          rename(constraint(S),controllable_var(S), controllable2)),U),
+                      primaires) 
+    do 
+           %--- le système contrôlé est alors donné par le système ---%
+        systeme(event_var(S), States, evolution(S),
+                  [new_initial_states],[constraint(S),Rxyz]);

@@ -1,0 +1,7 @@
+
+read("Property.lib");
+read("Synthesis.lib");
+read("Verif_Determ.lib");
+read("Simul.lib");
+read("Synthesis_Partial_Order_Relation.lib");
+

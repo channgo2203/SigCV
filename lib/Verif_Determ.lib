@@ -1,0 +1,99 @@
+%************************************************************************%
+%************************************************************************%
+%---                        VERIFICATION                              ---%
+%************************************************************************%
+%************************************************************************%
+
+%--- Internal function : possibly1 --%
+def possibly1(S,x) : Reachable(S, projection(intersection(x, constraint(S)), state_var(S)));
+
+%--- Possibly ---%
+def POSSIBLE(S,prop) : possibly1(S,prop);
+
+
+%****************************************%
+%    Always				 %
+% Returns "true" if prop is always true  %
+%****************************************%
+
+def Always(S,prop) : notb(possibly1(S,complementary(prop)));
+
+%*****************************************%
+%      Never				  %
+% Retuns "true" if prop is never true     %
+%*****************************************%
+def Never(S,prop) : notb(possibly1(S,prop));
+
+
+%******************************************%
+%     ATTRACTIF :  		 	   %
+% Rend vrai si prop peut se produire       %
+%******************************************%
+
+def Attract(S,prop1,prop2) : 
+       notb(subset(prop1,greatest_c_inv(S,complementary(prop2))));
+	
+%******************************************%
+%     Controle Invariant                   %
+% Rend vrai si on peut piloter le systeme  %
+% De maniere a ce que prop soit vrai       %
+%******************************************%
+
+def C_Invariant(S,prop) : Invariant_under_control(S,prop);
+	
+	
+%*********************%
+%     CTL Logic       %
+%*********************%
+
+%--- Boolean Operators %
+
+et: intersection;
+ou: union;
+non: complementaire;
+def imp(p1,p2) : ou(non(p1), p2);
+
+%--- next ---%
+
+% There exist a successor such that P holds%
+def EX(p) : some_succ(S, p);
+
+% All the  successors verifies P %
+def AX(p) : all_succ(S, p);
+
+
+%--- until ---%
+
+% It exists a path on which P1 is true until P2 becomes true % 
+def EU(p1,p2) : loop z=union(z, intersection(p1, EX(z))) init p2;
+
+% A[p1 U p2], For all possible  paths,  P1 is true until P2 becomes true % 
+def AU(p1,p2) : loop z=union(z, intersection(p1, AX(z))) init p2;
+
+%--- always ---%
+
+%There always a path such that p is true%
+def EG(p) : greatest_c_inv(S, p);
+
+% whatever the beahvior of S, p is true % 
+def AG(p) : greatest_inv(S, p);
+
+%--- eventually ---%
+
+% Thre exist a finite path such that p will be true% 
+def EF(p) : loop z=union(z, EX(z)) init p;
+
+% whatever the beahvior of S, p will evetnually becomes true%
+% in a finite number of transitions %
+
+def AF(p) : loop z=union(z, AX(z)) init p;
+
+%--- verification ---%
+def Check_CTL_Formulae(p) : inclus(initial(S), p);
+
+
+%--- Possible / Certain : e est une liste d'equations ---%
+
+def possible(e) : projection(intersection(constraint(S), gen(e)), etats);
+
+def certain(e) : coefx(union(complementaire(constraint(S)), gen(e)), etats);

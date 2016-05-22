@@ -1,0 +1,153 @@
+
+% The mathematical formulation of the next computations can be found in    %
+% H. Marchand, M. Samaan,  Incremental Design of a Power Transformer Station %  
+% Controller using Controller Synthesis Methodology,   IEEE Transaction on   %  
+% Software Engineering,  26(8):729-741, Août 2000%  
+  
+
+% the set "duplicate_states" that can be obtained by %
+% duplicate_states :   declare_suff(state_var(S));  %  
+
+
+% Some technical considerations % 
+% Input: C(X) is the cost function used for the control    % 
+%        C_dup(X__1) is the duplicated cost function of C(X)  %
+% where X__1 is, for example obtained as follows:           %  
+% Sigali> duplicate_states :   declare_suff(state_var(S));  %
+% next one have to declare C_dup (i.e. same as for C but with %  
+% the variables of  the variables set duplicate_states      %  
+% Nb. The name of these variables is X__1, where X was a    % 
+% already declared variable.                                %  
+
+% Limitations No automatic reordering -> set_reorder(0)      %
+% the variable order must be as follows X1>X1__1>X2>_X2__1...%
+% So, if you plan to use these functions then never use the  %
+% reodering after  the use of  declare_suff(state_var(S))    %
+% Once you plan not to use these functions anymore, then you %
+% activate again the automatic reordering                    %
+
+
+% Given a cost functions C(X) and a system S, the next function gives access   % 
+% to a controlled system such that whatever the current position of the system % 
+% S under control, the supervisor will make the system evolve into the state x % 
+% such that forall x' reachable from the current position C(x)<=C(x')          % 
+
+
+def Supervisor_Lower_than(S,C,C_dup,duplicate_states) : 
+   with 
+	% R(x,x__1)=0 <=>  C_global(x) <= C_global(x__1)%
+	R_Q = a_cost2rel(C,C_dup,state_var(S),duplicate_states),
+	% U -> U__1 %   
+	controllables2  =  declare_suff(controllable_var(S)),
+	% X'=P(X,Y,U__1) % 	
+	evolutions2   =   l_rename(evolution(S), 
+				   controllable_var(S), controllables2),
+	double_evolutions = concat(evolution(S), evolutions2),
+	double_states = union_lvar(state_var(S),duplicate_states),
+	% R_Q(P(X,Y,U'),P(X,Y,U))=0 % 
+	% i.e. we want the next state to be as good as possible %  
+	% according to the order relation R_Q                   %   
+	R_Next =  subst(R_Q, double_states, double_evolutions),
+
+	% The control policy is then to choose among the possible % 
+	% values of the controllable variables, the one that   %  
+	% will make the system evolve into the state with the best quality%  
+	% This is given by adding the  following equation to the original system%  
+	% C(X,Y,U)= Q \oplus (1- exists_U'(Q2\oplus R_Next))% 
+
+		% Q(X,Y,U__1)=0 %  
+	Q2 = rename(constraint(S), controllable_var(S),controllables2)
+
+	do 
+	intersection(constraint(S), 
+		     complementary(exist(intersection(Q2,R_Next),
+					 controllables2)));
+
+
+def Lower_than(S,C,C_dup,duplicate_states) :  
+	system(event_var(S),state_var(S), evolution(S),
+                 [initial(S)], [Supervisor_Lower_than(S,C,C_dup,duplicate_states)],controllable_var(S));
+
+
+
+
+% Given a cost functions C(X) and a system S, the next function gives access   % 
+% to a controlled system such that whatever the current position of the system % 
+% S under control, the supervisor will make the system evolve into the state x % 
+% such that forall x' reachable from the current position C(x)>= C(x')         % 
+
+def Supervisor_Greater_than(S,C,C_dup,duplicate_states) : 
+   with
+	R_Q = a_cost2rel_inv(C,C_dup,state_var(S),duplicate_states),  
+	controllables2  =  declare_suff(controllable_var(S)),
+	evolutions2   =   l_rename(evolution(S), 
+				   controllable_var(S), controllables2),
+	double_evolutions = concat(evolution(S), evolutions2),
+	double_states = union_lvar(state_var(S),duplicate_states),
+	R_Next =  subst(R_Q, double_states, double_evolutions),
+	Q2 = rename(constraint(S), controllable_var(S),controllables2)
+
+        do 
+	intersection(constraint(S), 
+		     complementary(exist(intersection(Q2,R_Next),
+					 controllables2)));
+
+def Greater_than(S,C,C_dup,duplicate_states) :  
+	system(event_var(S),state_var(S), evolution(S),
+                 [initial(S)], [Supervisor_Greater_than(S,C,C_dup,duplicate_states)],controllable_var(S));
+
+
+% Given a cost functions C(X) and a system S, the next function gives access   % 
+% to a controlled system such that whatever the current position of the system % 
+% S under control, the supervisor will make the system evolve into the state x % 
+% such that forall x' reachable from the current position C(x)< C(x')          % 
+
+def Supervisor_Strictly_Lower_than(S,C,C_dup,duplicate_states) : 
+   with
+	R_Q = a_cost2rel_strict(C,C_dup,duplicate_states,state_var(S)),
+	controllables2  =  declare_suff(controllable_var(S)),
+	evolutions2   =   l_rename(evolution(S), 
+				   controllable_var(S), controllables2),
+	double_evolutions = concat(evolution(S), evolutions2),
+	double_states = union_lvar(state_var(S),duplicate_states),
+        R_Next =  subst(R_Q, double_states, double_evolutions),
+	Q2 = rename(constraint(S), controllable_var(S),controllables2)
+
+        do  	intersection(constraint(S), 
+		     complementary(exist(intersection(Q2,R_Next),
+					 controllables2)));
+
+def Strictly_Lower_than(S,C,C_dup,duplicate_states) :  
+	system(event_var(S),state_var(S), evolution(S),
+                 [initial(S)], [Supervisor_Strictly_Lower_than(S,C,C_dup,duplicate_states)],controllable_var(S));
+
+
+
+% Given a cost functions C(X) and a system S, the next function gives access   % 
+% to a controlled system such that whatever the current position of the system % 
+% S under control, the supervisor will make the system evolve into the state x % 
+% such that forall x' reachable from the current position C(x)> C(x')          % 
+
+def Supervisor_Strictly_Greater_than(S,C,C_dup,duplicate_states) : 
+   with
+	R_Q = a_cost2rel_inv_strict(C,C_dup,duplicate_states,state_var(S)),
+	controllables2  =  declare_suff(controllable_var(S)),
+	evolutions2   =   l_rename(evolution(S), 
+				   controllable_var(S), controllables2),
+	double_evolutions = concat(evolution(S), evolutions2),
+	double_states = union_lvar(state_var(S),duplicate_states),
+	R_Next =  subst(R_Q, double_states, double_evolutions),
+	Q2 = rename(constraint(S), controllable_var(S),controllables2)
+	
+   do  	intersection(constraint(S), 
+		     complementary(exist(intersection(Q2,R_Next),
+					 controllables2)));
+
+
+def Strictly_Greater_than(S,C,C_dup,duplicate_states) :  
+	system(event_var(S),state_var(S), evolution(S),
+                 [initial(S)], [Supervisor_Strictly_Greater_than(S,C,C_dup,duplicate_states)],
+		  controllable_var(S));
+
+
+

@@ -1,0 +1,17 @@
+
+def system_product(S) :  
+       with 
+         next_etats = declare_suff(etats),
+         next_conditions = declare_suff(conditions),
+         etats_conditions = union_lvar(etats,conditions),
+         next_etats_conditions = union_lvar(next_etats,next_conditions),
+         Q   = contrainte(S),
+         Q_2 = renommage(Q,etats_conditions,next_etats_conditions),
+         evolutions2 =  l_renommage(evolutions, etats_conditions, next_etats_conditions)
+     do
+        
+        systeme(union_lvar(conditions,next_conditions),
+                union_lvar(etats,next_etats),
+                concat(evolutions,evolutions2),
+                concat(initialisations,l_renommage(initialisations,etats,next_etats)),
+                [Q,Q_2]);

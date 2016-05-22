@@ -1,0 +1,81 @@
+
+
+% sans cout sur les transitions %
+def pre_cost_function(Ci, S) : 
+  with 
+	E = a_inf(Ci, a_const(65535)),  %Loic Besnard%
+	F = some_succ(S, E), 
+	K = Cx + add_rename(Ci, CURR, NEXT), 
+	COUPLES = projection(intersection(R, F), union_lvar(CURR, NEXT)),
+	Kp = a_part(COUPLES, K, ainfty, ainfty) 
+  do
+    a_min(Ci, a_margmin(Kp, NEXT));	
+
+
+def min_cost_function(S, Cx, EF) : 
+  with 
+	States = state_var(S),
+	States_Uncontrolables = comp_lvar(controllable_var(S)),
+	Q = constraint(S),
+	Q1 = projection(Q, States_Uncontrolables),
+	CQ1 = complementary(Q1),
+	IMP = implicit_sys(S),
+	NEXT = state_var_next_I(IMP),
+	CURR = state_var(S), 
+	R = trans_rel_I(IMP),
+	C0 = a_part(EF, Cx, ainfty, ainfty)  do
+  loop Ci = pre_cost_function(Ci, S) init C0 ; 
+
+
+def S_min_weight_path(S, Cx, Ef) : 
+  with
+       Cm = min_cost_function(S, Cx, Ef),
+       States_2 = declare_suff(state_var(S)),
+       Cm_2 = add_rename(Cm, state_var(S), States_2) 
+  do 
+     Strictly_Lower_than(S, Cm, Cm_2, States_2); 
+
+
+% avec cout sur les transitions (tout controlable)%
+
+
+def pre_cost_function2(Ci, Cx, Cy, S) : 
+  with 
+	% état déjà parcouru %
+	E = a_inf(Ci, a_const(65535)),  
+	
+	% Nouveaux états %
+	F = some_succ(S, E),
+
+	%c(x,y,x') avec x' \in E %
+	K = Cx + Cy + add_rename(Ci, CURR, NEXT), 
+
+	Triple = intersection(R, F),
+
+	Kp = a_part(Triple, K, ainfty, ainfty) 
+  do
+    a_min(Ci, a_margmin(Kp,  union_lvar(event_var(S),NEXT)));	
+
+
+def min_cost_function2(S, Cx, Cy, EF) : 
+  with 
+	States = state_var(S),
+	States_Uncontrolables = comp_lvar(controllable_var(S)),
+	Q = constraint(S),
+	Q1 = projection(Q, States_Uncontrolables),
+	CQ1 = complementary(Q1),
+	IMP = implicit_sys(S),
+	NEXT = state_var_next_I(IMP),
+	CURR = state_var(S), 
+	R = trans_rel_I(IMP),
+	C0 = a_part(EF, Cx, ainfty, ainfty)  do
+  loop Ci = pre_cost_function2(Ci, Cx, Cy, S) init C0 ; 
+
+
+def S_min_weight_path2(S, Cx, Cy, Ef) : 
+  with
+       Cm = min_cost_function(S, Cx, Ef),
+       States_2 = declare_suff(state_var(S)),
+       Cm_2 = add_rename(Cm, state_var(S), States_2) 
+  do 
+     Strictly_Lower_than(S, Cm, Cm_2, States_2); 

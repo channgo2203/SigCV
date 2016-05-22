@@ -1,0 +1,51 @@
+
+
+    %--- Duplication des etats---%
+P_etats :declare_suff(etats);
+
+     %--- Calcul de la relation d'ordre R ---%
+QV: Q1;
+QW: renommage(Q1, etats, P_etats);
+X2: union_lvar(etats, P_etats);
+
+Rel1: coefx(union(complementaire(QV), QW), X2);
+Rel2: coefx(union(complementaire(QW), QV), X2);
+R: intersection(Rel1, complementaire(Rel2));
+
+     %--- Calcul des états initiaux  ---%
+
+%--- inf(E) = { x tq il existe x' > x dans E } ---%
+def inf(x) : projection(intersection(R, renommage(x,etats,P_etats)), etats);
+
+%--- max(E) rend les éléments maximaux de E pour la relation R ---%
+def max(x) : intersection(x, complementaire(inf(x)));
+
+
+
+intersection(Q0, complementaire(projection(intersection(R, renommage(Q0,etats,P_etats)), etats)))
+
+
+%--- Les états initiaux sont alors les suivants ---%
+INIT : max(Q0);
+
+%--- Calcul des nouvelles contraintes ---%
+
+          %--- Duplication de nouvelles variables ---%
+          %--- et création de nouveaux polynômes --%
+primaires : union_lvar(etats, evenements);
+controlables2 : declare_suff(controlables);
+Q2:
+evolutions2 :  l_renommage(evolutions, controlables, controlables2);
+double_evolutions : concat(evolutions, evolutions2);
+double_etats : concat(etats, p_etats);
+
+         %---  U(x,y,z,z') = 0 ssi P(x,y,z) < P(x,y,z')   ---%
+
+U: subst(R, double_etats, double_evolutions);
+
+         %--- R(x,y,z)=0 ssi pour tout z' tq Q(x,y,z')=0 => U(x,y,z,z') = 0 ---%
+Rxyz : coefx(union(complementaire(renommage(Q,controlables, controlables2)),
+                   U),primaires);
+
+%--- le système contrôlé est alors donné par le systeme renommé S ---%
+S : systeme(conditions, etats, evolutions,INIT, [Q,Rxyz]);

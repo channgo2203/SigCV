@@ -1,0 +1,219 @@
+ %*******************************************************************%
+ %*******************************************************************%
+ %---                          SYNTHÈSE                           ---%
+ %*******************************************************************%
+ %*******************************************************************%
+
+
+
+	          %*****************%
+                  %    INVARIANT    % 
+                  %*****************%
+
+      %--- La fonction  S_Invariant_sous_controle(x) rend le plus grand ---%
+      %--- invariant sous contrôle contenu dans x                       ---%
+
+def  Invariant_under_Control(S,x) :
+  	coefx(union(CQ1, projection(intersection(Q, comorphisme(S,x)),
+                                     States_Uncontrolables)),
+              States);
+
+def  S_Invariant_under_Control(S,x) :
+      with
+	   States = state_var(S), 
+		% Il faudrait ameliorer comp_lvar % 
+	   States_Uncontrolables = comp_lvar(controllable_var(S)), 
+           Q =  constraint(S),
+           Q1 = projection(Q,States_Uncontrolables),
+           CQ1 = complementary(Q1)
+      do
+    loop y = intersection(y, Invariant_under_Control(S,y)) init x;
+
+
+
+%-- la fonction S_Security rend le systeme contrôlé vérifiant la ---%
+%-- propriété d'invariance prop. To be used with B_True/B_False/B_Absent  ---%
+
+def S_Security(S,prop) :
+   with Inter = S_Invariant_under_Control(S,prop) do
+       processus(event_var(S), state_var(S) , evolution(S),
+                 concat([Inter],[initial(S)]),
+                 [constraint(S),comorphisme(S,Inter)],controllable_var(S));
+
+def S_Invariance(S,prop) : S_Security(S,prop);
+            %*****************%
+            %    REACHABLE    %
+            %*****************%
+
+% le but de cet objectif de commande est de %
+% rendre atteignable  prop                  %
+
+
+%--- Calculs de prédécesseurs et de l'ensemble des prédecesseurs ---%
+def pred_1(x) : projection(intersection(constraint(S), comorphisme(S,x)), state_var(S));
+
+def Reach(E, O_1) :
+      loop y=union(y,intersection(E, pred_1(y)))
+                     init intersection(E,O_1);
+
+
+        %--- définition de la fonction S_reachable ---%
+def S_reachable(S,O_1) :
+   loop x= Reach(intersection(x, Invariant_under_Control(S,x)),O_1)
+           init projection(constraint(S),States);
+
+        %--- définition de la fonction S_reachable ---%
+def S_reachable2(S,O_1) :
+   loop x= union(x, Invariant_under_Control(S,x))
+           init O_1;
+
+
+%-- la fonction S_REACHABLE rend le systeme contrôlé vérifiant la ---%
+%-- propriété d'atteignabilite prop      ---%
+
+def S_Reachable(S,O_1) :
+  with      
+	    States = state_var(S),
+	    States_Uncontrolables = comp_lvar(controllable_var(S)), 
+            Q =  constraint(S),
+            Q1 = projection(Q,States_Uncontrolables),
+            CQ1 = complementary(Q1),
+            Inter = S_reachable(S,O_1) do
+       processus(event_var(S), state_var(S) , evolution(S),
+                 concat([Inter],[initial(S)]),
+                 [constraint(S),comorphisme(S,Inter)],controllable_var(S));
+
+        %*****************%
+        %    ATTRACTIF    %
+        %*****************%
+
+% le but de cet objectif de commande est de rendre attractif prop %
+
+def pred_2(S,x,y) : coefx(union(comorphisme(S,x),
+                              complementary(intersection(constraint(S), comorphisme(S,y)))),
+                        state_var(S));
+
+def Att(S,E,O_2) :
+   loop y=union(y,intersection(E, pred_2(S,y,E)))
+           init intersection(E,O_2);
+
+
+       %--- définition de la fonction S_attractif ---%
+def S_attractif(S,O_2) :
+     loop x= Att(S,intersection(x, Invariant_under_Control(S,x)),O_2)
+             init projection(constraint(S),state_var(S));
+
+%-- la fonction S_Attractivity rend le systeme contrôlé vérifiant la ---%
+%-- propriété d'attractivite prop      ---%
+
+def S_Attractivity(S,prop) :
+  with     Q =  constraint(S),
+	   States = state_var(S),
+	   States_Uncontrolables = comp_lvar(controllable_var(S)), 
+           Q1 = projection(Q,States_Uncontrolables),
+           CQ1 = complementary(Q1),
+           intermediaire = S_attractif(S,prop)  	   do
+           processus(event_var(S), state_var(S) , evolution(S),
+                     concat([intermediaire],[initial(S)]),
+                     [constraint(S),comorphisme(S,intermediaire)],controllable_var(S));
+
+        %*****************************%
+        %  S_Reachable_security       %
+        %*****************************%
+
+% le but de cet objectif de commande est de %
+%     - rendre invariant prop1              %
+%     - rendre atteignable prop1            %
+
+def S_Reachable_Secur(S,prop) :
+    with  
+       Q =  constraint(S),
+       States = state_var(S),
+       States_Uncontrolables = comp_lvar(controllable_var(S)), 
+       Q1 = projection(Q,States_Uncontrolables),
+       CQ1 = complementary(Q1),
+   %--- On rend invariant la propriété Prop ---%
+     G1 = S_Invariant_under_Control(S,prop),
+   %--- Le contrôleur est alors le suivant : ---%
+     Q_1 = comorphisme(S,G1),
+   %--- Calcul du plus grand ensemble permettant d'accéder en un nombre ---%
+   %--- quelconque de transitions à l'ensemble G1                       ---%
+     G2 = S_reachable(S,G1),
+   %---  nouvelles constraints sur le système ---%
+            Q2 = comorphisme(S,G2),
+   %--- nouvelles constraints sur les états initiaux ---%
+            I = concat([G2],initialisations),
+   %--- le système est alors contrôlé par ---%
+            Control = intersection(union(complementary(Q_1),Q2),
+                                   union(complementary(Q2),Q_1)) do
+   %--- le système contrôlé est alors donné par le systeme ---%
+        system(event_var(S),state_var(S), evolution(S),I,
+                  [constraint(S),Control], controllable_var(S));
+
+       %*****************************%
+       %  S_Attractivity_security    %
+       %*****************************%
+
+% le but de cet objectif de commande est de %
+%     - rendre invariant prop1              %
+%     - rendre atteignable prop1            %
+
+def S_Attractivity_Secur(S,prop) :
+    with   
+       States = state_var(S),
+       Q =  constraint(S),
+	States_Uncontrolables = comp_lvar(controllable_var(S)),
+       Q1 = projection(Q,States_Uncontrolables),
+       CQ1 = complementary(Q1), 
+     G1 = S_Invariant_sous_controle(S,prop), 
+     Q_1 = comorphisme(S,G1), 
+     G2 = S_attractif(S,G1), 
+            Q2 = comorphisme(S,G2), 
+            I = concat([G2],initialisations), 
+            Control = intersection(union(complementary(Q_1),Q2),
+                                   union(complementary(Q2),Q_1)) do 
+        systeme(conditions, etats, evolutions,I,
+                  [constraint(S),Control],controllable_var(S));
+
+           %*******************************%
+           % Merge security & reachable    %
+           %*******************************%
+
+% le but de cet objectif de commande est de %
+%     - rendre invariant prop1              %
+%     - rendre attractif prop2              %
+
+
+def S_MERGE_REACHABLE_SECUR(S,O_1,O_2) :
+  with
+     Q =  constraint(S),
+	States_Uncontrolables = comp_lvar(controllable_var(S)),
+       Q1 = projection(Q,States_Uncontrolables),
+           CQ_1 = complementary(Q_1),
+     G = loop x= Reach(intersection(x, Invariant_sous_controle(x)),O_2) 
+	     init O_1,
+     CONTROL =  comorphisme(S,G),
+     I = concat([G], initialisations)
+  do
+      systeme(conditions, etats, evolutions, I, [constraint(S), CONTROL],controllable_var(S));
+
+           %*******************************%
+           % Merge security & attractif    %
+           %*******************************%
+
+% le but de cet objectif de commande est de %
+%     - rendre invariant prop1              %
+%     - rendre attractif prop2              %
+
+
+def S_MERGE_ATTRACTIF_SECUR(S,O_1,O_2) :
+  with
+     Q =  constraint(S),
+	States_Uncontrolables = comp_lvar(controllable_var(S)),
+       Q1 = projection(Q,States_Uncontrolables),
+           CQ_1 = complementary(Q_1),
+     G = loop x= Att(intersection(x, Invariant_sous_controle(x)),O_2) init O_1,
+     CONTROL =  comorphisme(S,G),
+     I = concat([G], initialisations)
+  do
+      systeme(conditions, etats, evolutions, I, [constraint(S), CONTROL],controllable_var(S));

@@ -1,0 +1,40 @@
+
+%***********************************************************%
+% simul(S,nom_fichier1,nom_fichier2):                       %  
+% Création du contrôleur au format voulu, afin qu'il puisse %
+% être lu par le resolver. Le résultat est stocké dans deux %
+% fichiers ayant pour noms nom_fichier1 et nom_fichier2     %
+% correspondant au nom primitif du processus decompile      % 
+% avec .res et .sim comme suffixes.                         %
+% Ce nom est directement fourni par la décompilation en z3z.%
+%***********************************************************%
+
+
+def simul(S,nom_fichier1,nom_fichier2) :
+       with
+           % Calcul des variables utiles pour la simulation % 
+	Etats_Incontrolables= comp_lvar(controllable_var_I(S)),
+        incont = inter_lvar(Etats_Incontrolables,event_var_I(S)),
+        Q  = projection(trans_rel_I(S),union_lvar(state_var_I(S),event_var_I(S))),
+        Q1 = projection(Q,Etats_Incontrolables),
+
+
+                  %  - Contr      : Polynôme des contraintes Q'      %
+                  % permet de prendre en compte les assertions       %
+                  %  - Cont       : Contrôleur proprement dit (Q+C)  %
+
+             Contr = control_conf(incont,state_var_I(S),Q1,[]),
+             Cont = control_conf(controllable_var_I(S),Etats_Incontrolables,Q,[])
+     do
+
+             % Création des deux fichiers "nom_fichier1" et "nom_fichier2"   %
+             %  - nomfichier1 : à destination du resolver                    %
+             %  - nomfichier2 : à destination du compilateur signal          %
+             % Pour la création du resolver et du simulateur                 %
+
+       control_export(
+          controleur(state_var_I(S),[], incont,
+                      [Contr, Cont],[]),nom_fichier1, nom_fichier2);
+
+
+                 

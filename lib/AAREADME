@@ -1,0 +1,134 @@
+
+     
+  ***********************
+  * Libraries  SIGALI   *
+  ***********************
+
+This directory  contains libraries that have  to be loaded in  order to perform
+analyses  on a polynomial  dynamical system  coming from  the abstraction  of a
+signal Program.
+
+* File <<name>>.z3z
+-----------------
+
+These files are automatically generated  by the Signal Compiler. They come from
+the logical  abstraction of  a Signal program  on which either  verification or
+synthesis  has  to  be performed. 
+
+* File Creat_SDP.lib
+-----------------------
+
+This file  is read  by Sigali once  the file  <<name>>.z3z has been  loaded. It
+automatically generates a  polynomial dynamical system, named S  as well as the
+various  polynomial, list  of polynomial  and variables  that are  necessary to
+analyze S  (names are generic  and not specific  to a system). 
+
+As output, we have a polynomial dynamical system under the form:
+     X -> state variables
+     Y -> event variables
+     K -> controllable event variables (K is included in Y)
+     X' = P(X,Y,K) -> state variable evolution list
+     Q(X,Y,K)=0    -> constraint polynomial
+     Q_o(X_o) = 0 -> initialization polynomial
+
+The named of  the system is S.  It is possible to access  these different lists
+and  polynomials as  follows using  Sigali functions:   
+
+      - states_var(S) -> X 
+      - event_var(S)  -> Y 
+      - controllable(S) -> K
+      - constraint(S) -> Q
+      - evolution(S) -> P
+      - initial(S) -> Q_o
+
+*  File Property.lib
+----------------------
+
+This  files  contains  some  Sigali  functions allowing  the  state  properties
+specification (these functions can be used in Signal+ as well).
+
+
+  ******************
+  *   VERIFICATION *
+  ******************
+  
+* file Verif_Déterm.lib
+--------------------------
+
+This file  has to be  loaded if  the user wants  to perform verification  on an
+explicit polynomial dynamical  system named S.  This PDS  are deterministic. We
+found in this  file various (and classical) verification  functions.
+
+     - alive(SYSTEM) ->  BOOLEAN :  vivace(syst) is true  whenever this system
+       is alive (ie  no deadlock). If syst is a processus,  the "Nul" event (ie
+       all the event variables equal to 0) is inhibited.
+
+     - C_invariant(SYSTEM,  POLY) ->  BOOLEAN  : c_invariant(syst,  p) is  True
+       whenever the set  of states, solutions of the  polynomial p is invariant
+       under control with respect to the  system syst. ie there is always a way
+       to stay inside V(p).  
+
+     - invariant(SYSTEM, POLY) -> BOOLEAN : invariant(syst, p) is True whenever
+       the  set of  states,  solution of  the  polynomial p  is invariant  with
+       respect to  the system syst. (Also  available in Signal+  under the name
+       Always(Poly)).
+
+     - Reachable(SYSTEM,  POLY)  ->  BOOLEAN  :   Reachable(syst,  p)  is  True
+       whenever at least one of the state  of the set V(p) can be reached via a
+       trajectory of the system from one of the initial states. (Also available
+       in Signal+ under the name Reachable(Poly)).
+
+     - Attractivity(POLY  X POLY)  ->  BOOLEAN :   Attractivity(p1,p2) is  True
+       whenever  all the  trajectories initialized  in V(p1)  reach the  set of
+       states   V(p2).   (Also   available    in   Signal+   under   the   name
+       Attractivity(Poly)).
+
+  ***************************
+  *  Controller synthesis   *
+  ***************************
+
+* File Synthesis.lib
+-----------------------
+
+   - S_Security(SYSTEM,POLY)  -> SYSTEM  :  If  p encodes  a set  of  states E,
+     S_Security(S,p)  computes a controller  that ensures  the invariance  of E
+     with respect to the system S.  The controlled system is the output of this
+     function. (Also available in Signal+ under the name S_Security(Poly)).
+
+   - S_Reachable(SYSTEM,POLY)  -> SYSTEM :   If p  encodes a  set of  states E,
+     S_Reachable(S,p) computes a controller  that ensures the reachability of E
+     from  the initial  states  The controlled  system  is the  output of  this
+     function. (Also available in Signal+ under the name S_Reachable(Poly)).
+
+   - S_Attractivity(SYSTEM,POLY) -> SYSTEM  :  If p encodes a  set of states E,
+     S_Attractivity(S,p) computes a controller that ensures the attractivity of
+     E from  the initial  states The  controlled system is  the output  of this
+     function. (Also available in Signal+ under the name S_Attractivity(Poly)).
+
+   - S_Reachable_Security(SYSTEM,POLY)-> SYSTEM : If  p encodes a set of states
+     S_Attractivity(S,p)   computes  a  controller   that  first   ensures  the
+     invariance of E (computation of  the greatest invariant under U-control of
+     E, say F, and secondly that ensures the reachability of F from the initial
+     states.  The controlled system is the output of this function.
+
+   - S_Merge_Attractivity_Secur(SYSTEM,POLY X  POLY) -> SYSTEM :   If p1 (resp.
+     p2)     encodes     a     set     of    states     E1     (resp.      E2),
+     S_Merge_Attractivity_Secur(S,p1,p2) computes a controller that ensures the
+     invariance of E1  and the reachability of E2 from  the initial states. The
+     controlled system is the output of this function.
+
+* File Simul.lib
+-----------------------
+
+   - SIMUL(S,<<name>>.res  ,<<name>>.sim) :   This function  somehow  saves the
+     result of a synthesis session  in two files <<name>>.res ,<<name>>.sim. In
+     fact we save two polynomials:  Q'(X,Y)=\exists U Q(X,Y,U) and Q(X,Y,U), ie
+     the constraints one the uncontrollable part and the constraints polynomial
+     itself. The file <<name>>.res contains  the variables involved in this two
+     polynomials whereas the file <<name>>.sim contains the TDD them-self. This
+     files can be used further for simulation purposes (when loading a resolver
+     using the Signal  environment). (Also available in Signal+  under the name
+     Simul(). In that  case, the names of the two files  correspond to the name
+     of the process that have been compiled).
+
+   

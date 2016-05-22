@@ -1,0 +1,17 @@
+
+def succ(ee): subst(projection(intersection(ee,T_Rel),
+	                       state_var_next_I(S_Imp)),
+	            state_var_next_I(S_Imp),state_var_I(S_Imp));
+def orbite(S_Imp) : 
+	with 
+	   T_Rel = projection(trans_rel_I(S_Imp),union_lvar(state_var_I(S_Imp),state_var_next_I(S_Imp))) 
+	do
+	  loop xx = succ(xx) init initial_I(S_Imp); 
+
+def pruned(S_Imp,Orbite) :  
+	with Rel = intersection(trans_rel_I(S_Imp), Orbite, 
+	           subst(Orbite,state_var_I(S_Imp),state_var_next_I(S_Imp))),
+	     I =  intersection(initial_I(S_Imp))
+	do 
+	  const_sys(event_var_I(S_Imp),state_var_I(S_Imp), state_var_next_I(S_Imp), 
+              [Rel], [I], controllable_var_I(S_Imp));	

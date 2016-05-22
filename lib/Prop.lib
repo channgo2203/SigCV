@@ -1,0 +1,4 @@
+
+def Egal(P,Q) : union(gen([P=1,Q=1]),union(gen([P=-1,Q=-1]),gen([P=-1,Q=-1])));
+
+def Synch(P,Q) : gen([P^2=Q^2]);
